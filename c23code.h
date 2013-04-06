@@ -7,22 +7,21 @@
 typedef std::pair<uint64_t,uint64_t> _C23Block;
 typedef std::vector<_C23Block> _C23;
 
-class C23Codec : public AbstractCode
+class C23Codec : public AbstractCodec
 {
 public:
     C23Codec();
     ~C23Codec();
     virtual std::string encode(const uint64_t num);
-    virtual uint64_t decode(const std::string &code);
-
-private:
-    const char Ki_SYMBOl;
-    const char Di_SYMBOl;
-    const std::string BLOCK_DELIMITER;
-std::string CODE_DELIMITER;
-
+    virtual int64_t decode(const std::string &code, int64_t* codeLen = NULL);
 protected:
     virtual uint64_t fki(uint64_t ki);
+    const char Ki_SYMBOl;
+    const char Di_SYMBOl;
+    std::string CODE_DELIMITER;
+
+private:
+    const std::string BLOCK_DELIMITER;
 
 private:
     /**
@@ -40,6 +39,8 @@ private:
      * @return Block true if next block can be decoded.
      */
     bool getNextBlock(const char* code,_C23Block &block, bool *isDelimiter);
+
+    bool checkBlock(uint64_t di, uint64_t ki, uint64_t xi1, uint64_t ni1, uint64_t *xi);
 };
 
 #endif // C23CODE_H

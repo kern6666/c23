@@ -2,6 +2,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "util.h"
 #include "c23code.h"
 
 C23Codec::C23Codec():Ki_SYMBOl('1'),Di_SYMBOl('0'),BLOCK_DELIMITER("")
@@ -58,13 +59,13 @@ std::string C23Codec::encode(uint64_t num)
     return res;
 }
 
-uint64_t C23Codec::decode(const std::string &code)
+int64_t C23Codec::decode(const std::string &code, int64_t* codeLen)
 {
     //checking code size
     if(code.size() < 2 + 2 + CODE_DELIMITER.size())
     {
-        fprintf(stderr,"Wrong code size.\n");
-        return -1;
+        LOGE("Wrong code size.\n");
+        return ERROR_WRONG_SIZE;
     }
 
     const char* pcode = code.c_str();
@@ -84,15 +85,15 @@ uint64_t C23Codec::decode(const std::string &code)
     {
         alpha = -3;
     }else{
-        fprintf(stderr,"Wrong code prefix.\n");
-        return -1;
+        LOGE("Wrong code prefix.\n");
+        return ERROR_WRONG_PREFIX;
     }
     pcode += 2;
 
     _C23Block block;
 
     uint64_t prevNi = 0;
-    uint64_t ni;
+    //uint64_t ni;
     uint64_t xi = 1;
     bool isDelimiter = false;
 
@@ -100,14 +101,19 @@ uint64_t C23Codec::decode(const std::string &code)
     {
         if(!getNextBlock(pcode, block,&isDelimiter))
         {
-            fprintf(stderr,"Can not decode block from code <%s>. \n",pcode);
-            return -1;
+            LOGE("Can not decode block from code <%s>. \n",pcode);
+            return ERROR_WRONG_BLOCK;
         }
 
         if(isDelimiter)
             break;
-        ni = block.first + block.second + prevNi - 1;
-        xi = (1 << ni) + pow(3, block.second) * xi;
+        if(!checkBlock(block.first , block.second, xi, prevNi, &xi))
+        {
+            LOGE("Wrong block: <%s>. \n",pcode);
+            return ERROR_WRONG_BLOCK;
+        }
+//        ni = block.first + block.second + prevNi - 1;
+//        xi = (1 << ni) + pow(3, block.second) * xi;
         pcode += block.first + block.second;
         prevNi = (uint64_t)log2(xi);
     }
@@ -116,8 +122,13 @@ uint64_t C23Codec::decode(const std::string &code)
 
     if(!isDelimiter)
     {
-        fprintf(stderr, "Can not find deliter block.\n");
-        return -1;
+        LOGE("Can not find deliter block.\n");
+        return ERROR_CANNOT_FIND_DELIMITE;
+    }
+
+    if(codeLen != NULL)
+    {
+        *codeLen = pcode - code.c_str() + 4;
     }
 
     return xi;
@@ -206,5 +217,30 @@ bool C23Codec::getNextBlock(const char *code, _C23Block &resultBlock, bool *isDe
     resultBlock.first = di;
     resultBlock.second = ki;
     return true;
+}
+
+bool C23Codec::checkBlock(uint64_t di, uint64_t ki, uint64_t xi1, uint64_t ni1, uint64_t *xi)
+{
+    double log23 = log2(3);
+    uint64_t ni = di + ki + ni1 - 1;
+    *xi = (1 << ni) + pow(3, ki) * xi1;
+    if( ((uint64_t)log2(*xi)) != ni)
+    {//checking minimal block
+        if( ki *(log23 - 1) - log23 < di - 1 && di - 1 < ki*(log23 - 1) +1)
+        {
+            return true;
+        }else
+        {
+            return false;
+        }
+    }else{ //checking maximal block
+        if( ki *(log23 - 1) < di - 1)
+        {
+            return true;
+        }else
+        {
+            return false;
+        }
+    }
 }
 

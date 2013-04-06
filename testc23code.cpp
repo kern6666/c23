@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "c23code.h"
+#include "c23codeccs.h"
+#include "c23codeccs2.h"
 #include "testc23code.h"
 #include "time.h"
 
@@ -9,21 +12,25 @@ Testc23Code::Testc23Code()
 {
 }
 
-void Testc23Code::test1()
+void Testc23Code::runTests()
 {
-    time_t start = time(NULL);
-    C23Codec c23;
-    for(int x = 2; x < 1000000; x++)
-    {
-        std::string code = c23.encode(x);
-        int res = c23.decode(code.c_str());
-        assert( res == x );
-    }
-    printf("Test Succeed %d seconds.\n", time(NULL) - start);
+   C23Codec codec1;
+   testCodec(2,100000, codec1);
+   C23CodecCS codec2;
+   testCodec(2,100000, codec2);
+   C23CodecCS2 codec3;
+   testCodec(2,100000, codec3);
 }
 
 
-void Testc23Code::runTests()
+void Testc23Code::testCodec(uint64_t from, uint64_t to1, AbstractCodec &codec)
 {
-    test1();
+    time_t start = time(NULL);
+    for(int64_t x = from; x < (int64_t)to1; x++)
+    {
+        std::string code = codec.encode(x);
+        int64_t res = codec.decode(code);
+        assert( res == x );
+    }
+    printf("Test Succeed %ld seconds.\n", time(NULL) - start);
 }

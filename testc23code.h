@@ -1,13 +1,12 @@
 #ifndef TESTC23CODE_H
 #define TESTC23CODE_H
-
-#include <c23code.h>
+#include "abstractcode.h"
 
 class Testc23Code
 {
 public:
     Testc23Code();
-    void test1();
+    void testCodec(uint64_t from, uint64_t to1, AbstractCodec &codec);
     void runTests();
 };
 
