@@ -4,6 +4,7 @@
 #include "c23code.h"
 #include "c23codeccs.h"
 #include "c23codeccs2.h"
+#include "c23codeccs3.h"
 #include "testc23code.h"
 #include "time.h"
 
@@ -20,6 +21,8 @@ void Testc23Code::runTests()
    testCodec(2,100000, codec2);
    C23CodecCS2 codec3;
    testCodec(2,100000, codec3);
+   C23CodecCS3 codec4;
+   testCodec(2,100000, codec4);
 }
 
 

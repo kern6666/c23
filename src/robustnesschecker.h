@@ -13,12 +13,13 @@ typedef struct RobustCheckingResult
 class RobustnessChecker
 {
 public:
-    RobustnessChecker(AbstractCodec* codec);
+    RobustnessChecker(int n, ...);
     ~RobustnessChecker();
-    int check(int64_t num);
-    RobustCheckingResult  check(int64_t from, int64_t to, int64_t times);
+    int check(int64_t num, int codec_num);
+    RobustCheckingResult*  check(int64_t from, int64_t to, int64_t times);
 private:
-    AbstractCodec* codec;
+    AbstractCodec** codecs;
+    int ncodecs;
 private:
     int invertOneBit(std::string &str);
 };

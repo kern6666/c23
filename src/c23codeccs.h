@@ -8,6 +8,8 @@ public:
     C23CodecCS();
     virtual std::string encode(const uint64_t num);
     virtual int64_t decode(const std::string &code, int64_t* codeLen = NULL);
+ protected:
+    int checkControlSum(const std::string &code,int64_t ncode);
 };
 
 #endif // C23CODECCS_H

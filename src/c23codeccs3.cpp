@@ -2,26 +2,25 @@
 #include <string.h>
 #include <stdio.h>
 #include "util.h"
-#include "c23codeccs2.h"
+#include "c23codeccs3.h"
 
-C23CodecCS2::C23CodecCS2()
+C23CodecCS3::C23CodecCS3()
 {
 }
 
 
-std::string C23CodecCS2::encode(const uint64_t num)
+std::string C23CodecCS3::encode(const uint64_t num)
 {
-    std::string c23Code = C23Codec::encode(num);
+    std::string c23Code = C23CodecCS::encode(num);
     addControlSum(c23Code);
     return c23Code;
 }
 
 
-int64_t C23CodecCS2::decode(const std::string &code, int64_t *codeLen)
+int64_t C23CodecCS3::decode(const std::string &code, int64_t *codeLen)
 {
     int64_t ncode;
 
-    errorPos = -1;
     std::string delimiter1;
     delimiter1.append(1, Ki_SYMBOl);
     delimiter1.append(CODE_DELIMITER);
@@ -60,9 +59,9 @@ int64_t C23CodecCS2::decode(const std::string &code, int64_t *codeLen)
 }
 
 
-void C23CodecCS2::addControlSum(std::string &code)
+void C23CodecCS3::addControlSum(std::string &code)
 {
-    uint64_t ncode = code.size() - CODE_DELIMITER.size();
+    uint64_t ncode = code.size() - CODE_DELIMITER.size() - 2;
     std::vector<int> cs = getControlSum(code,0,ncode);
     int nequation = cs.size();
 
@@ -72,7 +71,7 @@ void C23CodecCS2::addControlSum(std::string &code)
     }
 }
 
-std::vector<int> C23CodecCS2::getControlSum(const std::string &code, int , int ncode)
+std::vector<int> C23CodecCS3::getControlSum(const std::string &code, int , int ncode)
 {
     std::vector<int> cs;
     int nequation = ceil( log2( ncode + 1) );
@@ -91,9 +90,12 @@ std::vector<int> C23CodecCS2::getControlSum(const std::string &code, int , int n
     return cs;
 }
 
-int C23CodecCS2::checkControlSum(const std::string &code, int64_t codeLen)
+int C23CodecCS3::  checkControlSum(const std::string &code, int64_t codeLen)
 {
     uint64_t ncode = codeLen;
+    int isFirstCSOK;
+
+    isFirstCSOK = C23CodecCS::checkControlSum(code,codeLen);
 
     if(ncode <= 0)
     {
@@ -105,7 +107,7 @@ int C23CodecCS2::checkControlSum(const std::string &code, int64_t codeLen)
     int64_t error = 0;
     int diff;
     int j;
-    int offset = codeLen + CODE_DELIMITER.size();
+    int offset = codeLen + CODE_DELIMITER.size() + 2;
     for( j =0; j < nequation && offset + j < (int) code.size() ; j++ )
     {
         diff =  (cs[j] + (code[offset + j ] - '0')) % 2;
@@ -117,16 +119,21 @@ int C23CodecCS2::checkControlSum(const std::string &code, int64_t codeLen)
         return ERROR_WRONG_SIZE;
     }
 
-    return error;
+    if(isFirstCSOK == 0 )
+    {
+        return 0;
+    }else{
+        return error;
+    }
 }
 
 
-uint8_t C23CodecCS2::nbit(uint64_t num, uint32_t nbit)
+uint8_t C23CodecCS3::nbit(uint64_t num, uint32_t nbit)
 {
     return (num >> nbit) & 0x1;
 }
 
-void C23CodecCS2::invertBit(std::string &str, int pos)
+void C23CodecCS3::invertBit(std::string &str, int pos)
 {
     str[pos] = ( 1 - (str[pos] - '0')) + '0';
 }

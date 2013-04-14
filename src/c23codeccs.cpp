@@ -11,7 +11,7 @@ std::string C23CodecCS::encode(const uint64_t num)
     int64_t nZero = 0;
     int64_t nOne = 0;
     size_t codelen = code.size();
-    for(size_t i = 0; i < codelen; i++)
+    for(size_t i = 0; i < codelen - CODE_DELIMITER.size(); i++)
     {
         if(code[i] == '0')
         {
@@ -32,26 +32,10 @@ int64_t C23CodecCS::decode(const std::string &code, int64_t* codeLen)
     int64_t res = C23Codec::decode(code,&ncode);
     if( res >= 0 )
     {
-        if(code.size() < ncode + 2)
+        int isCheckSumOK = checkControlSum(code,ncode - CODE_DELIMITER.size());
+        if( isCheckSumOK != 0 )
         {
-            LOGE("Can not find check sum.");
-            return ERROR_WRONG_SIZE;
-        }
-        int64_t nZero = 0;
-        int64_t nOne = 0;
-        for(int64_t i = 0; i < ncode; i++)
-        {
-            if(code[i] == '0')
-            {
-                nZero++;
-            }else if(code[i] == '1'){
-                nOne++;
-            }
-        }
-        if( code[ncode] - '0' != nZero % 2
-                || code[ncode + 1] - '0' != nOne % 2)
-        {
-            return ERROR_WRONG_CHECKSUM;
+            return isCheckSumOK;
         }else
         {
             if(codeLen != NULL)
@@ -62,5 +46,36 @@ int64_t C23CodecCS::decode(const std::string &code, int64_t* codeLen)
         }
     }else{
         return res;
+    }
+}
+
+int C23CodecCS::checkControlSum(const std::string &code, int64_t ncode)
+{
+    int64_t nZero = 0;
+    int64_t nOne = 0;
+
+    if(code.size() < ncode + 2)
+    {
+        LOGE("Can not find check sum.");
+        return ERROR_WRONG_SIZE;
+    }
+
+    for(int64_t i = 0; i < ncode; i++)
+    {
+        if(code[i] == '0')
+        {
+            nZero++;
+        }else if(code[i] == '1'){
+            nOne++;
+        }
+    }
+
+    if(code[ncode + CODE_DELIMITER.size()] - '0' == nZero % 2
+            && code[ncode + CODE_DELIMITER.size() + 1] - '0' == nOne % 2)
+    {
+        return 0;
+    }else
+    {
+        return ERROR_WRONG_CHECKSUM;
     }
 }
